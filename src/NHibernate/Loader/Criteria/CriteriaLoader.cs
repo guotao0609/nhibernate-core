@@ -161,12 +161,10 @@ namespace NHibernate.Loader.Criteria
 												Dialect.Dialect dialect)
 		{
 			if (lockModes == null || lockModes.Count == 0)
-			{
 				return sqlSelectString;
-			}
 
-			Dictionary<string, LockMode> aliasedLockModes = new Dictionary<string, LockMode>();
-			Dictionary<string, string[]> keyColumnNames = dialect.ForUpdateOfColumns ? new Dictionary<string, string[]>() : null;
+			var aliasedLockModes = new Dictionary<string, LockMode>();
+			var keyColumnNames = dialect.ForUpdateOfColumns ? new Dictionary<string, string[]>() : null;
 			string[] drivingSqlAliases = Aliases;
 
 			//NH-3710: if we are issuing an aggregation function, Aliases will be null
@@ -177,12 +175,13 @@ namespace NHibernate.Loader.Criteria
 					LockMode lockMode;
 					if (lockModes.TryGetValue(drivingSqlAliases[i], out lockMode))
 					{
-						ILockable drivingPersister = (ILockable)EntityPersisters[i];
-						string rootSqlAlias = drivingPersister.GetRootTableAlias(drivingSqlAliases[i]);
-						aliasedLockModes[rootSqlAlias] = lockMode;
+					var drivingPersister = (ILockable) EntityPersisters[i];
+					foreach (var querySpace in drivingPersister.QuerySpaces)
+					{
+						string @alias = drivingPersister.GetRootTableAlias(querySpace);
+						aliasedLockModes[@alias] = lockMode;
 						if (keyColumnNames != null)
-						{
-							keyColumnNames[rootSqlAlias] = drivingPersister.RootTableIdentifierColumnNames;
+							keyColumnNames[@alias] = drivingPersister.RootTableIdentifierColumnNames;
 						}
 					}
 				}
