@@ -729,6 +729,8 @@
     <Compile Include="NHSpecificTest\NH2931\Models.cs" />
     <Compile Include="NHSpecificTest\NH3046\Fixture.cs" />
     <Compile Include="NHSpecificTest\NH3046\Model.cs" />
+    <Compile Include="NHSpecificTest\NH3461\Model.cs" />
+    <Compile Include="NHSpecificTest\NH3461\FilteredManyToOneTest.cs" />
     <Compile Include="NHSpecificTest\NH3518\ClassWithXmlMember.cs" />
     <Compile Include="NHSpecificTest\NH3518\XmlColumnTest.cs" />
     <Compile Include="NHSpecificTest\NH3609\MappingEntity.cs" />
@@ -794,9 +796,7 @@
     <Compile Include="NHSpecificTest\NH3512\Fixture.cs" />
     <Compile Include="NHSpecificTest\NH3459\Fixture.cs" />
     <Compile Include="NHSpecificTest\NH3459\Order.cs" />
-    <Compile Include="NHSpecificTest\NH3506\BaseClass.cs" />
-    <Compile Include="NHSpecificTest\NH3506\Department.cs" />
-    <Compile Include="NHSpecificTest\NH3506\Employee.cs" />
+    <Compile Include="NHSpecificTest\NH3506\Model.cs" />
     <Compile Include="NHSpecificTest\NH3506\Fixture.cs" />
     <Compile Include="NHSpecificTest\NH2692\Fixture.cs" />
     <Compile Include="NHSpecificTest\NH2692\Model.cs" />
@@ -997,7 +997,6 @@
     <Compile Include="NHSpecificTest\NH1270\Fixture.cs" />
     <Compile Include="NHSpecificTest\NH1323\CheckViability.cs" />
     <Compile Include="NHSpecificTest\NH1323\Domain.cs" />
-    <Compile Include="NHSpecificTest\ManyToOneFilters20Behaviour\PropertyRefFixture.cs" />
     <Compile Include="NHSpecificTest\NH1421\AnEntity.cs" />
     <Compile Include="NHSpecificTest\NH1421\Fixture.cs" />
     <Compile Include="NHSpecificTest\NH1642\AbstractRule.cs" />
@@ -3170,6 +3169,7 @@
     <EmbeddedResource Include="NHSpecificTest\NH1291AnonExample\Mappings.hbm.xml" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="NHSpecificTest\NH3461\Mappings.hbm.xml" />
     <EmbeddedResource Include="NHSpecificTest\NH2218\Mappings.hbm.xml" />
     <EmbeddedResource Include="NHSpecificTest\NH3046\Mappings.hbm.xml" />
     <EmbeddedResource Include="NHSpecificTest\NH3518\Mappings.hbm.xml" />
@@ -3432,7 +3432,6 @@
     <EmbeddedResource Include="NHSpecificTest\NH2288\AclassWithNothing.hbm.xml" />
     <EmbeddedResource Include="NHSpecificTest\NH2288\AclassWithSpecific.hbm.xml" />
     <EmbeddedResource Include="TypesTest\XmlDocClass.hbm.xml" />
-    <EmbeddedResource Include="NHSpecificTest\ManyToOneFilters20Behaviour\PropertyRef.hbm.xml" />
     <EmbeddedResource Include="NHSpecificTest\NH2302\Mappings.hbm.xml" />
     <EmbeddedResource Include="NHSpecificTest\NH2303\Mappings.hbm.xml" />
     <EmbeddedResource Include="NHSpecificTest\NH2287\Mappings.hbm.xml" />
@@ -3754,7 +3753,6 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

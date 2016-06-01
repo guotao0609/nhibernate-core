@@ -151,12 +151,48 @@ namespace NHibernate.Test.NHSpecificTest.ManyToOneFilters20Behaviour
 				IList<Parent> resCriteria = joinGraphUsingCriteria(s);
 				IList<Parent> resHql = joinGraphUsingHql(s);
 
-				Assert.IsNotNull(resCriteria[0].Address);
-				Assert.IsNotNull(resHql[0].Address);
+                Assert.AreEqual(1, resCriteria.Count);
+                Assert.IsNotNull(resCriteria[0].Address);
+                Assert.AreEqual(1, resHql.Count);
+                Assert.IsNotNull(resHql[0].Address);
 			}
 		}
 
-		[Test]
+        [Test]
+        public void Verify20BehaviourForPropertyRefAndFilter()
+        {
+            using (ISession s = OpenSession())
+            {
+                using (ITransaction tx = s.BeginTransaction())
+                {
+                    Parent p = createParent();
+                    s.Save(p);
+                    tx.Commit();
+                }
+            }
+            using (var s = OpenSession())
+            {
+                using (s.BeginTransaction())
+                {
+                    s.EnableFilter("active")
+                        .SetParameter("active", true);
+
+                    var resCriteria = s.CreateCriteria(typeof(Parent)).SetFetchMode("Address", FetchMode.Join)
+                        .List<Parent>();
+
+                    var resHql = s.CreateQuery("select p from Parent p join p.Address")
+                        .List<Parent>();
+
+                    Assert.AreEqual(1, resCriteria.Count);
+                    Assert.IsNotNull(resCriteria[0].Address);
+                    Assert.AreEqual(1, resHql.Count);
+                    Assert.IsNotNull(resHql[0].Address);
+                }
+            }
+        }
+
+
+        [Test]
 		public void ExplicitFiltersOnCollectionsShouldBeActive()
 		{
 			using (ISession s = OpenSession())

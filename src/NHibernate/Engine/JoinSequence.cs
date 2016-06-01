@@ -182,12 +182,7 @@ namespace NHibernate.Engine
 				}
 				else
 				{
-					// NH Different behavior : NH1179 and NH1293
-					// Apply filters in Many-To-One association
-					var enabledForManyToOne = FilterHelper.GetEnabledForManyToOne(enabledFilters);
-					condition = new SqlString(string.IsNullOrEmpty(on) && enabledForManyToOne.Count > 0
-					            	? join.Joinable.FilterFragment(join.Alias, enabledForManyToOne)
-					            	: on);
+					condition = new SqlString(@on);
 				}
 
 				if (withClauseFragment != null)
