@@ -178,7 +178,7 @@ namespace NHibernate.Engine
 												? on
 												: "".Equals(on)
 														? manyToManyFilter
-														: on + " and " + manyToManyFilter);
+														: on + manyToManyFilter);
 				}
 				else
 				{
