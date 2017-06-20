@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Runtime.Serialization;
@@ -41,6 +42,10 @@ namespace NHibernate.AdoNet
 		private readonly ISessionImplementor session;
 		private readonly ConnectionReleaseMode connectionReleaseMode;
 		private readonly IInterceptor interceptor;
+		private readonly List<ISessionImplementor> _sessionsSharingManager = new List<ISessionImplementor>();
+
+		public ISessionImplementor Session => session;
+		public IReadOnlyCollection<ISessionImplementor> SessionsSharingManager => _sessionsSharingManager;
 
 		[NonSerialized]
 		private bool _releasesEnabled = true;
@@ -61,6 +66,16 @@ namespace NHibernate.AdoNet
 			batcher = session.Factory.Settings.BatcherFactory.CreateBatcher(this, interceptor);
 
 			ownConnection = suppliedConnection == null;
+		}
+
+		public void AddSessionSharingManager(ISessionImplementor session)
+		{
+			_sessionsSharingManager.Add(session);
+		}
+
+		public void RemoveSessionSharingManager(ISessionImplementor session)
+		{
+			_sessionsSharingManager.Remove(session);
 		}
 
 		public bool IsInActiveTransaction

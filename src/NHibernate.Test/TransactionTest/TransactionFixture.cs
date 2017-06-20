@@ -1,19 +1,13 @@
 using System;
-using System.Collections;
-using System.Data.Common;
+using System.Linq;
+using NHibernate.Linq;
 using NUnit.Framework;
 
 namespace NHibernate.Test.TransactionTest
 {
 	[TestFixture]
-	public class TransactionFixture : TestCase
+	public class TransactionFixture : TransactionFixtureBase
 	{
-		protected override IList Mappings
-		{
-			// The mapping is only actually needed in one test
-			get { return new string[] {"Simple.hbm.xml"}; }
-		}
-
 		[Test]
 		public void SecondTransactionShouldntBeCommitted()
 		{
@@ -74,25 +68,25 @@ namespace NHibernate.Test.TransactionTest
 		{
 			using (ISession s = OpenSession())
 			{
-				using (ITransaction t = s.BeginTransaction())
+				using (s.BeginTransaction())
 				{
 				}
 
-				s.CreateQuery("from Simple").List();
+				s.CreateQuery("from Person").List();
 
 				using (ITransaction t = s.BeginTransaction())
 				{
 					t.Commit();
 				}
 
-				s.CreateQuery("from Simple").List();
+				s.CreateQuery("from Person").List();
 
 				using (ITransaction t = s.BeginTransaction())
 				{
 					t.Rollback();
 				}
 
-				s.CreateQuery("from Simple").List();
+				s.CreateQuery("from Person").List();
 			}
 		}
 
@@ -139,6 +133,37 @@ namespace NHibernate.Test.TransactionTest
 					Assert.IsFalse(t.IsActive);
 					Assert.IsFalse(s.Transaction.IsActive);
 				}
+			}
+		}
+
+		[Test]
+		public void FlushFromTransactionAppliesToSharingSession()
+		{
+			using (var s = OpenSession())
+			{
+				var builder = s.SessionWithOptions().Connection();
+
+				using (var s1 = builder.OpenSession())
+				using (var s2 = builder.OpenSession())
+				using (var t = s.BeginTransaction())
+				{
+					var p1 = new Person();
+					// The relationship is there for failing in case the flush ordering is not the expected one.
+					var p2 = new Person { Related = p1 };
+					var p3 = new Person { Related = p2 };
+					s1.Save(p1);
+					s2.Save(p2);
+					s.Save(p3);
+					t.Commit();
+				}
+			}
+
+			using (var s = OpenSession())
+			using (var t = s.BeginTransaction())
+			{
+				Assert.That(s.Query<Person>().Count(), Is.EqualTo(3));
+				Assert.That(s.Query<Person>().Count(p => p.Related != null), Is.EqualTo(2));
+				t.Commit();
 			}
 		}
 	}
