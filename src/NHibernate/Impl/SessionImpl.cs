@@ -201,7 +201,7 @@ namespace NHibernate.Impl
 					if (options.UserSuppliedConnection != null)
 						throw new SessionException("Cannot simultaneously share transaction context and specify connection");
 					connectionManager = sharedOptions.ConnectionManager;
-					connectionManager.AddSessionSharingManager(this);
+					connectionManager.AddDependentSession(this);
 				}
 				else
 				{
@@ -299,7 +299,7 @@ namespace NHibernate.Impl
 				{
 					if (!_transactionCoordinatorShared)
 						return connectionManager.Close();
-					connectionManager.RemoveSessionSharingManager(this);
+					connectionManager.RemoveDependentSession(this);
 					return null;
 				}
 				finally

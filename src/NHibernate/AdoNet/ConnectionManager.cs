@@ -75,12 +75,12 @@ namespace NHibernate.AdoNet
 			ownConnection = suppliedConnection == null;
 		}
 
-		public void AddSessionSharingManager(ISessionImplementor session)
+		public void AddDependentSession(ISessionImplementor session)
 		{
 			_dependentSessions.Add(session);
 		}
 
-		public void RemoveSessionSharingManager(ISessionImplementor session)
+		public void RemoveDependentSession(ISessionImplementor session)
 		{
 			_dependentSessions.Remove(session);
 		}

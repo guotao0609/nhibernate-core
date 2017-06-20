@@ -45,12 +45,18 @@ namespace NHibernate.Test.SystemTransactions
 					// The relationship is there for failing in case the flush ordering is not the expected one.
 					var p2 = new Person { Related = p1 };
 					var p3 = new Person { Related = p2 };
+					// If putting p3 here, adjust base tear-down.
+					var p4 = new Person { Related = p2 };
 
 					using (var s1 = builder.OpenSession())
 						s1.Save(p1);
 					using (var s2 = builder.OpenSession())
+					{
 						s2.Save(p2);
-					s.Save(p3);
+						using (var s3 = s2.SessionWithOptions().Connection().OpenSession())
+							s3.Save(p3);
+					}
+					s.Save(p4);
 					t.Complete();
 				}
 			}
@@ -58,8 +64,8 @@ namespace NHibernate.Test.SystemTransactions
 			using (var s = OpenSession())
 			using (var t = s.BeginTransaction())
 			{
-				Assert.That(s.Query<Person>().Count(), Is.EqualTo(3));
-				Assert.That(s.Query<Person>().Count(p => p.Related != null), Is.EqualTo(2));
+				Assert.That(s.Query<Person>().Count(), Is.EqualTo(4));
+				Assert.That(s.Query<Person>().Count(p => p.Related != null), Is.EqualTo(3));
 				t.Commit();
 			}
 		}
@@ -73,15 +79,19 @@ namespace NHibernate.Test.SystemTransactions
 
 				using (var s1 = builder.OpenSession())
 				using (var s2 = builder.OpenSession())
+				using (var s3 = s2.SessionWithOptions().Connection().OpenSession())
 				using (var t = new TransactionScope())
 				{
 					var p1 = new Person();
 					// The relationship is there for failing in case the flush ordering is not the expected one.
 					var p2 = new Person { Related = p1 };
 					var p3 = new Person { Related = p2 };
+					// If putting p3 here, adjust base tear-down.
+					var p4 = new Person { Related = p2 };
 					s1.Save(p1);
 					s2.Save(p2);
-					s.Save(p3);
+					s3.Save(p3);
+					s.Save(p4);
 					t.Complete();
 				}
 			}
@@ -89,8 +99,8 @@ namespace NHibernate.Test.SystemTransactions
 			using (var s = OpenSession())
 			using (var t = s.BeginTransaction())
 			{
-				Assert.That(s.Query<Person>().Count(), Is.EqualTo(3));
-				Assert.That(s.Query<Person>().Count(p => p.Related != null), Is.EqualTo(2));
+				Assert.That(s.Query<Person>().Count(), Is.EqualTo(4));
+				Assert.That(s.Query<Person>().Count(p => p.Related != null), Is.EqualTo(3));
 				t.Commit();
 			}
 		}
