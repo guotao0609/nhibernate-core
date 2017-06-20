@@ -1,14 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
-				   namespace="NHibernate.Test.TransactionTest"
-				   assembly="NHibernate.Test">
+    namespace="NHibernate.Test.TransactionTest"
+    assembly="NHibernate.Test">
 
-	<class name="Person">
-		<id name="Id">
-			<generator class="hilo"/>
-		</id>
+  <class name="Person">
+    <id name="Id">
+      <generator class="hilo"/>
+    </id>
     <property name="CreatedAt"/>
-    <property name="NotNullData"/> <!-- NOT NULL will be set on created schema directly to avoid NH checks. -->
     <many-to-one name="Related" class="Person" />
-	</class>
+  </class>
 </hibernate-mapping>

@@ -8,8 +8,6 @@ namespace NHibernate.Test.TransactionTest
 
 		public virtual DateTime CreatedAt { get; set; } = DateTime.Now;
 
-		public virtual string NotNullData { get; set; } = "not-null";
-
 		public virtual Person Related { get; set; }
 	}
 }
