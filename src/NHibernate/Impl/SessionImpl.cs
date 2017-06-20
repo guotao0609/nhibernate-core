@@ -318,9 +318,9 @@ namespace NHibernate.Impl
 		public override void AfterTransactionCompletion(bool success, ITransaction tx)
 		{
 			if (!_transactionCoordinatorShared)
-				foreach (var sharingSession in ConnectionManager.SessionsSharingManager)
+				foreach (var dependentSession in ConnectionManager.DependentSessions)
 				{
-					sharingSession.AfterTransactionCompletion(success, tx);
+					dependentSession.AfterTransactionCompletion(success, tx);
 				}
 
 			using (new SessionIdLoggingContext(SessionId))
@@ -2112,18 +2112,18 @@ namespace NHibernate.Impl
 			}
 
 			if (!_transactionCoordinatorShared)
-				foreach (var sharingSession in ConnectionManager.SessionsSharingManager)
+				foreach (var dependentSession in ConnectionManager.DependentSessions)
 				{
-					sharingSession.AfterTransactionBegin(tx);
+					dependentSession.AfterTransactionBegin(tx);
 				}
 		}
 
 		public override void BeforeTransactionCompletion(ITransaction tx)
 		{
 			if (!_transactionCoordinatorShared)
-				foreach (var sharingSession in ConnectionManager.SessionsSharingManager)
+				foreach (var dependentSession in ConnectionManager.DependentSessions)
 				{
-					sharingSession.BeforeTransactionCompletion(tx);
+					dependentSession.BeforeTransactionCompletion(tx);
 				}
 
 			using (new SessionIdLoggingContext(SessionId))

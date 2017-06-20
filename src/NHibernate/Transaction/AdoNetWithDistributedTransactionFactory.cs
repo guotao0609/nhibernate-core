@@ -82,13 +82,13 @@ namespace NHibernate.Transaction
 
 		private static void Cleanup(ISessionImplementor session)
 		{
-			foreach (var sharingSession in session.ConnectionManager.SessionsSharingManager.ToList())
+			foreach (var dependentSession in session.ConnectionManager.DependentSessions.ToList())
 			{
-				if (sharingSession.TransactionContext?.ShouldCloseSessionOnDistributedTransactionCompleted ?? false)
+				if (dependentSession.TransactionContext?.ShouldCloseSessionOnDistributedTransactionCompleted ?? false)
 					// This change the enumerated collection.
-					sharingSession.CloseSessionFromDistributedTransaction();
-				sharingSession.TransactionContext?.Dispose();
-				sharingSession.TransactionContext = null;
+					dependentSession.CloseSessionFromDistributedTransaction();
+				dependentSession.TransactionContext?.Dispose();
+				dependentSession.TransactionContext = null;
 			}
 			if (session.TransactionContext.ShouldCloseSessionOnDistributedTransactionCompleted)
 			{
@@ -145,12 +145,12 @@ namespace NHibernate.Transaction
 							{
 								using (sessionImplementor.ConnectionManager.FlushingFromDtcTransaction)
 								{
-									foreach (var sharingSession in sessionImplementor.ConnectionManager.SessionsSharingManager)
+									foreach (var dependentSession in sessionImplementor.ConnectionManager.DependentSessions)
 									{
-										if (sharingSession.FlushMode != FlushMode.Manual)
+										if (dependentSession.FlushMode != FlushMode.Manual)
 										{
-											logger.DebugFormat("[session-id={0}] Flushing from Dtc Transaction", sharingSession.SessionId);
-											sharingSession.Flush();
+											logger.DebugFormat("[session-id={0}] Flushing from Dtc Transaction", dependentSession.SessionId);
+											dependentSession.Flush();
 										}
 									}
 									if (sessionImplementor.FlushMode != FlushMode.Manual)

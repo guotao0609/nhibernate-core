@@ -42,10 +42,17 @@ namespace NHibernate.AdoNet
 		private readonly ISessionImplementor session;
 		private readonly ConnectionReleaseMode connectionReleaseMode;
 		private readonly IInterceptor interceptor;
-		private readonly List<ISessionImplementor> _sessionsSharingManager = new List<ISessionImplementor>();
+		private readonly List<ISessionImplementor> _dependentSessions = new List<ISessionImplementor>();
 
+		/// <summary>
+		/// The session responsible for the lifecycle of the connection manager.
+		/// </summary>
 		public ISessionImplementor Session => session;
-		public IReadOnlyCollection<ISessionImplementor> SessionsSharingManager => _sessionsSharingManager;
+
+		/// <summary>
+		/// The sessions using the connection manager of the session responsible for it.
+		/// </summary>
+		public IReadOnlyCollection<ISessionImplementor> DependentSessions => _dependentSessions;
 
 		[NonSerialized]
 		private bool _releasesEnabled = true;
@@ -70,12 +77,12 @@ namespace NHibernate.AdoNet
 
 		public void AddSessionSharingManager(ISessionImplementor session)
 		{
-			_sessionsSharingManager.Add(session);
+			_dependentSessions.Add(session);
 		}
 
 		public void RemoveSessionSharingManager(ISessionImplementor session)
 		{
-			_sessionsSharingManager.Remove(session);
+			_dependentSessions.Remove(session);
 		}
 
 		public bool IsInActiveTransaction

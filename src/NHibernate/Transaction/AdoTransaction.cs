@@ -186,11 +186,11 @@ namespace NHibernate.Transaction
 
 				log.Debug("Start Commit");
 
-				foreach (var sharingSession in session.ConnectionManager.SessionsSharingManager)
+				foreach (var dependentSession in session.ConnectionManager.DependentSessions)
 				{
-					if (sharingSession.FlushMode != FlushMode.Manual)
+					if (dependentSession.FlushMode != FlushMode.Manual)
 					{
-						sharingSession.Flush();
+						dependentSession.Flush();
 					}
 				}
 				if (session.FlushMode != FlushMode.Manual)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq;
 using System.Threading;
 using log4net;
 using NHibernate.Cache;
@@ -57,9 +58,9 @@ namespace NHibernate.Test
 				allClosed = CheckSessionWasClosed(session) && allClosed;
 				// Catches only session opened from another one while sharing the connection. Those
 				// opened without sharing the connection stay un-monitored.
-				foreach (var sharingSession in session.ConnectionManager.SessionsSharingManager)
+				foreach (var dependentSession in session.ConnectionManager.DependentSessions.ToList())
 				{
-					allClosed = CheckSessionWasClosed(sharingSession) && allClosed;
+					allClosed = CheckSessionWasClosed(dependentSession) && allClosed;
 				}
 			}
 
