@@ -317,12 +317,6 @@ namespace NHibernate.Impl
 		/// </summary>
 		public override void AfterTransactionCompletion(bool success, ITransaction tx)
 		{
-			if (!_transactionCoordinatorShared)
-				foreach (var dependentSession in ConnectionManager.DependentSessions)
-				{
-					dependentSession.AfterTransactionCompletion(success, tx);
-				}
-
 			using (new SessionIdLoggingContext(SessionId))
 			{
 				log.Debug("transaction completion");
@@ -357,6 +351,12 @@ namespace NHibernate.Impl
 				//if (autoClear)
 				//	Clear();
 			}
+
+			if (!_transactionCoordinatorShared)
+				foreach (var dependentSession in ConnectionManager.DependentSessions)
+				{
+					dependentSession.AfterTransactionCompletion(success, tx);
+				}
 		}
 
 		private void Cleanup()
