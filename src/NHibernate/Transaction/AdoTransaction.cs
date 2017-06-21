@@ -161,6 +161,7 @@ namespace NHibernate.Transaction
 		{
 			using (new SessionIdLoggingContext(sessionId))
 			{
+				session.ConnectionManager.AfterTransaction();
 				session.AfterTransactionCompletion(successful, this);
 				NotifyLocalSynchsAfterTransactionCompletion(successful);
 				session = null;

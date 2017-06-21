@@ -321,12 +321,6 @@ namespace NHibernate.Impl
 			{
 				log.Debug("transaction completion");
 
-				// Let the originating session notify the connection manager
-				if (!_transactionCoordinatorShared)
-				{
-					connectionManager.AfterTransaction();
-				}
-
 				persistenceContext.AfterTransactionCompletion();
 				actionQueue.AfterTransactionCompletion(success);
 
@@ -346,7 +340,6 @@ namespace NHibernate.Impl
 						log.Error("exception in interceptor afterTransactionCompletion()", t);
 					}
 				}
-
 
 				//if (autoClear)
 				//	Clear();

@@ -220,10 +220,6 @@ namespace NHibernate.Impl
 
 		public override void AfterTransactionCompletion(bool successful, ITransaction tx)
 		{
-			using (new SessionIdLoggingContext(SessionId))
-			{
-				connectionManager.AfterTransaction();
-			}
 		}
 
 		public override object GetContextEntityIdentifier(object obj)

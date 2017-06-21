@@ -67,6 +67,7 @@ namespace NHibernate.Transaction
 						{
 							logger.Warn("Completed transaction was disposed, assuming transaction rollback", ode);
 						}
+						session.ConnectionManager.AfterTransaction();
 						session.AfterTransactionCompletion(wasSuccessful, null);
 						Cleanup(session);
 					}
@@ -202,6 +203,7 @@ namespace NHibernate.Transaction
 			{
 				using (new SessionIdLoggingContext(sessionImplementor.SessionId))
 				{
+					sessionImplementor.ConnectionManager.AfterTransaction();
 					sessionImplementor.AfterTransactionCompletion(false, null);
 					logger.Debug("DTC transaction is in doubt");
 					enlistment.Done();
