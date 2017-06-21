@@ -326,10 +326,6 @@ namespace NHibernate.Impl
 			using (new SessionIdLoggingContext(SessionId))
 			{
 				log.Debug("transaction completion");
-				if (Factory.Statistics.IsStatisticsEnabled)
-				{
-					Factory.StatisticsImplementor.EndTransaction(success);
-				}
 
 				// Let the originating session notify the connection manager
 				if (!_transactionCoordinatorShared)
@@ -339,6 +335,12 @@ namespace NHibernate.Impl
 
 				persistenceContext.AfterTransactionCompletion();
 				actionQueue.AfterTransactionCompletion(success);
+
+				if (Factory.Statistics.IsStatisticsEnabled)
+				{
+					Factory.StatisticsImplementor.EndTransaction(success);
+				}
+
 				if (!_transactionCoordinatorShared || Interceptor != ConnectionManager.Session.Interceptor)
 				{
 					try
