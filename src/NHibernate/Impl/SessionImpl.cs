@@ -2099,12 +2099,6 @@ namespace NHibernate.Impl
 					Interceptor.AfterTransactionBegin(tx);
 				}
 			}
-
-			if (!_transactionCoordinatorShared)
-				foreach (var dependentSession in ConnectionManager.DependentSessions)
-				{
-					dependentSession.AfterTransactionBegin(tx);
-				}
 		}
 
 		public override void BeforeTransactionCompletion(ITransaction tx)
