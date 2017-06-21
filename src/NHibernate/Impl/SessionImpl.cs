@@ -2109,12 +2109,6 @@ namespace NHibernate.Impl
 
 		public override void BeforeTransactionCompletion(ITransaction tx)
 		{
-			if (!_transactionCoordinatorShared)
-				foreach (var dependentSession in ConnectionManager.DependentSessions)
-				{
-					dependentSession.BeforeTransactionCompletion(tx);
-				}
-
 			using (new SessionIdLoggingContext(SessionId))
 			{
 				log.Debug("before transaction completion");

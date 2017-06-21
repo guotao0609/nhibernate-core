@@ -144,26 +144,11 @@ namespace NHibernate.Transaction
 					{
 						using (var tx = new TransactionScope(AmbientTransation))
 						{
-							sessionImplementor.BeforeTransactionCompletion(null);
-							if (sessionImplementor.ConnectionManager.IsConnected)
-							{
-								using (sessionImplementor.ConnectionManager.FlushingFromDtcTransaction)
-								{
-									foreach (var dependentSession in sessionImplementor.ConnectionManager.DependentSessions)
-									{
-										if (dependentSession.FlushMode != FlushMode.Manual)
-										{
-											logger.DebugFormat("[session-id={0}] Flushing from Dtc Transaction", dependentSession.SessionId);
-											dependentSession.Flush();
-										}
-									}
-									if (sessionImplementor.FlushMode != FlushMode.Manual)
-									{
-										logger.DebugFormat("[session-id={0}] Flushing from Dtc Transaction", sessionImplementor.SessionId);
-										sessionImplementor.Flush();
-									}
-								}
-							}
+							BeforeTransactionCompletion(sessionImplementor);
+
+							foreach (var dependentSession in sessionImplementor.ConnectionManager.DependentSessions)
+								BeforeTransactionCompletion(dependentSession);
+
 							logger.Debug("prepared for DTC transaction");
 
 							tx.Complete();
@@ -176,6 +161,22 @@ namespace NHibernate.Transaction
 						preparingEnlistment.ForceRollback(exception);
 					}
 				}
+			}
+
+			static void BeforeTransactionCompletion(ISessionImplementor session)
+			{
+				if (session.ConnectionManager.IsConnected)
+				{
+					using (session.ConnectionManager.FlushingFromDtcTransaction)
+					{
+						if (session.FlushMode != FlushMode.Manual)
+						{
+							logger.DebugFormat("[session-id={0}] Flushing from Dtc Transaction", session.SessionId);
+							session.Flush();
+						}
+					}
+				}
+				session.BeforeTransactionCompletion(null);
 			}
 
 			void IEnlistmentNotification.Commit(Enlistment enlistment)
