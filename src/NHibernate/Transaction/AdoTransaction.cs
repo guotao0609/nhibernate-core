@@ -164,6 +164,9 @@ namespace NHibernate.Transaction
 				session.ConnectionManager.AfterTransaction();
 				session.AfterTransactionCompletion(successful, this);
 				NotifyLocalSynchsAfterTransactionCompletion(successful);
+				foreach (var dependentSession in session.ConnectionManager.DependentSessions)
+					dependentSession.AfterTransactionCompletion(successful, this);
+
 				session = null;
 				begun = false;
 			}

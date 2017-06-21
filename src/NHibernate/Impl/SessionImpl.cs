@@ -344,12 +344,6 @@ namespace NHibernate.Impl
 				//if (autoClear)
 				//	Clear();
 			}
-
-			if (!_transactionCoordinatorShared)
-				foreach (var dependentSession in ConnectionManager.DependentSessions)
-				{
-					dependentSession.AfterTransactionCompletion(success, tx);
-				}
 		}
 
 		private void Cleanup()

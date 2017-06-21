@@ -69,6 +69,9 @@ namespace NHibernate.Transaction
 						}
 						session.ConnectionManager.AfterTransaction();
 						session.AfterTransactionCompletion(wasSuccessful, null);
+						foreach (var dependentSession in session.ConnectionManager.DependentSessions)
+							dependentSession.AfterTransactionCompletion(wasSuccessful, null);
+
 						Cleanup(session);
 					}
 
@@ -205,6 +208,8 @@ namespace NHibernate.Transaction
 				{
 					sessionImplementor.ConnectionManager.AfterTransaction();
 					sessionImplementor.AfterTransactionCompletion(false, null);
+					foreach (var dependentSession in sessionImplementor.ConnectionManager.DependentSessions)
+						dependentSession.AfterTransactionCompletion(false, null);
 					logger.Debug("DTC transaction is in doubt");
 					enlistment.Done();
 					IsInActiveTransaction = false;
