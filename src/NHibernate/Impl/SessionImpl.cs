@@ -329,16 +329,13 @@ namespace NHibernate.Impl
 					Factory.StatisticsImplementor.EndTransaction(success);
 				}
 
-				if (!_transactionCoordinatorShared || Interceptor != ConnectionManager.Session.Interceptor)
+				try
 				{
-					try
-					{
-						Interceptor.AfterTransactionCompletion(tx);
-					}
-					catch (Exception t)
-					{
-						log.Error("exception in interceptor afterTransactionCompletion()", t);
-					}
+					Interceptor.AfterTransactionCompletion(tx);
+				}
+				catch (Exception t)
+				{
+					log.Error("exception in interceptor afterTransactionCompletion()", t);
 				}
 
 				//if (autoClear)
@@ -2093,11 +2090,7 @@ namespace NHibernate.Impl
 			using (new SessionIdLoggingContext(SessionId))
 			{
 				CheckAndUpdateSessionStatus();
-
-				if (!_transactionCoordinatorShared || Interceptor != ConnectionManager.Session.Interceptor)
-				{
-					Interceptor.AfterTransactionBegin(tx);
-				}
+				Interceptor.AfterTransactionBegin(tx);
 			}
 		}
 
@@ -2107,18 +2100,15 @@ namespace NHibernate.Impl
 			{
 				log.Debug("before transaction completion");
 				actionQueue.BeforeTransactionCompletion();
-				if (!_transactionCoordinatorShared || Interceptor != ConnectionManager.Session.Interceptor)
+				try
 				{
-					try
-					{
-						Interceptor.BeforeTransactionCompletion(tx);
-					}
-					catch (Exception e)
-					{
-						log.Error("exception in interceptor BeforeTransactionCompletion()", e);
+					Interceptor.BeforeTransactionCompletion(tx);
+				}
+				catch (Exception e)
+				{
+					log.Error("exception in interceptor BeforeTransactionCompletion()", e);
 
-						throw;
-					}
+					throw;
 				}
 			}
 		}
