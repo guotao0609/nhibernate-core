@@ -146,14 +146,19 @@ namespace NHibernate.Transaction
 					{
 						using (var tx = new TransactionScope(AmbientTransation))
 						{
-							BeforeTransactionCompletion(sessionImplementor);
+							if (sessionImplementor.ConnectionManager.IsConnected)
+							{
+								using (sessionImplementor.ConnectionManager.FlushingFromDtcTransaction)
+								{
+									sessionImplementor.BeforeTransactionCompletion(null);
+									foreach (var dependentSession in sessionImplementor.ConnectionManager.DependentSessions)
+										dependentSession.BeforeTransactionCompletion(null);
 
-							foreach (var dependentSession in sessionImplementor.ConnectionManager.DependentSessions)
-								BeforeTransactionCompletion(dependentSession);
+									logger.Debug("prepared for DTC transaction");
 
-							logger.Debug("prepared for DTC transaction");
-
-							tx.Complete();
+									tx.Complete();
+								}
+							}
 						}
 						preparingEnlistment.Prepared();
 					}
@@ -161,17 +166,6 @@ namespace NHibernate.Transaction
 					{
 						logger.Error("DTC transaction prepare phase failed", exception);
 						preparingEnlistment.ForceRollback(exception);
-					}
-				}
-			}
-
-			static void BeforeTransactionCompletion(ISessionImplementor session)
-			{
-				if (session.ConnectionManager.IsConnected)
-				{
-					using (session.ConnectionManager.FlushingFromDtcTransaction)
-					{
-						session.BeforeTransactionCompletion(null);
 					}
 				}
 			}
