@@ -2099,6 +2099,7 @@ namespace NHibernate.Impl
 			using (new SessionIdLoggingContext(SessionId))
 			{
 				log.Debug("before transaction completion");
+				FlushBeforeTransactionCompletion();
 				actionQueue.BeforeTransactionCompletion();
 				try
 				{
@@ -2110,6 +2111,15 @@ namespace NHibernate.Impl
 
 					throw;
 				}
+			}
+		}
+
+		public override void FlushBeforeTransactionCompletion()
+		{
+			using (new SessionIdLoggingContext(SessionId))
+			{
+				if (FlushMode != FlushMode.Manual)
+					Flush();
 			}
 		}
 

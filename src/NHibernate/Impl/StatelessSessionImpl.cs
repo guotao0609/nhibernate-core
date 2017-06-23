@@ -27,8 +27,10 @@ namespace NHibernate.Impl
 	public class StatelessSessionImpl : AbstractSessionImpl, IStatelessSession
 	{
 		private static readonly IInternalLogger log = LoggerProvider.LoggerFor(typeof(StatelessSessionImpl));
+
 		[NonSerialized]
 		private readonly ConnectionManager connectionManager;
+
 		[NonSerialized]
 		private readonly StatefulPersistenceContext temporaryPersistenceContext;
 
@@ -179,7 +181,7 @@ namespace NHibernate.Impl
 				temporaryPersistenceContext.Clear();
 			}
 		}
-		
+
 		public override IEnumerable Enumerable(IQueryExpression queryExpression, QueryParameters queryParameters)
 		{
 			throw new NotImplementedException();
@@ -216,6 +218,16 @@ namespace NHibernate.Impl
 
 		public override void BeforeTransactionCompletion(ITransaction tx)
 		{
+			FlushBeforeTransactionCompletion();
+		}
+
+		public override void FlushBeforeTransactionCompletion()
+		{
+			using (new SessionIdLoggingContext(SessionId))
+			{
+				if (FlushMode != FlushMode.Manual)
+					Flush();
+			}
 		}
 
 		public override void AfterTransactionCompletion(bool successful, ITransaction tx)
@@ -834,6 +846,7 @@ namespace NHibernate.Impl
 		#endregion
 
 		#region IDisposable Members
+
 		private bool _isAlreadyDisposed;
 
 		/// <summary>

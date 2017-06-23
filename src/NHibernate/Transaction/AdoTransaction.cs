@@ -190,19 +190,10 @@ namespace NHibernate.Transaction
 
 				log.Debug("Start Commit");
 
-				//Hibernate calls flush from inside BeforeTransactionCompletion
-				if (session.FlushMode != FlushMode.Manual)
-					session.Flush();
 				session.BeforeTransactionCompletion(this);
-
 				NotifyLocalSynchsBeforeTransactionCompletion();
-
 				foreach (var dependentSession in session.ConnectionManager.DependentSessions)
-				{
-					if (dependentSession.FlushMode != FlushMode.Manual)
-						dependentSession.Flush();
 					dependentSession.BeforeTransactionCompletion(this);
-				}
 
 				try
 				{

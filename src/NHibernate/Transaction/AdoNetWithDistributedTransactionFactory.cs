@@ -169,14 +169,9 @@ namespace NHibernate.Transaction
 				{
 					using (session.ConnectionManager.FlushingFromDtcTransaction)
 					{
-						if (session.FlushMode != FlushMode.Manual)
-						{
-							logger.DebugFormat("[session-id={0}] Flushing from Dtc Transaction", session.SessionId);
-							session.Flush();
-						}
+						session.BeforeTransactionCompletion(null);
 					}
 				}
-				session.BeforeTransactionCompletion(null);
 			}
 
 			void IEnlistmentNotification.Commit(Enlistment enlistment)
