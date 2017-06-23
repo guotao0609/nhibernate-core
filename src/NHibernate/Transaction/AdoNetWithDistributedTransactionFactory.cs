@@ -48,6 +48,8 @@ namespace NHibernate.Transaction
 			logger.DebugFormat("enlisted into DTC transaction: {0}",
 							   transactionContext.AmbientTransation.IsolationLevel);
 			session.AfterTransactionBegin(null);
+			foreach (var dependentSession in session.ConnectionManager.DependentSessions)
+				dependentSession.AfterTransactionBegin(null);
 
 			TransactionCompletedEventHandler handler = null;
 

@@ -154,6 +154,8 @@ namespace NHibernate.Transaction
 				rolledBack = false;
 
 				session.AfterTransactionBegin(this);
+				foreach (var dependentSession in session.ConnectionManager.DependentSessions)
+					dependentSession.AfterTransactionBegin(this);
 			}
 		}
 
