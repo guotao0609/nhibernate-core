@@ -18,7 +18,7 @@ namespace NHibernate.Proxy
 
 				object proxyInstance = IsClassProxy
 										? factory.CreateProxy(PersistentClass, initializer, Interfaces)
-										: factory.CreateProxy(Interfaces[0], initializer, Interfaces);
+										: factory.CreateProxy(typeof(object), initializer, Interfaces);
 
 				return (INHibernateProxy) proxyInstance;
 			}

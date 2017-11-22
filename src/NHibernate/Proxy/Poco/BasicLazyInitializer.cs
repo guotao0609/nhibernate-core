@@ -81,10 +81,6 @@ namespace NHibernate.Proxy.Poco
 				{
 					return null;
 				}
-				else if ("get_HibernateLazyInitializer".Equals(methodName))
-				{
-					return this;
-				}
 			}
 			else if (paramCount == 1)
 			{

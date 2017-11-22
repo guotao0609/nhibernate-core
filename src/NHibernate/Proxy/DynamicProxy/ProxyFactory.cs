@@ -112,7 +112,7 @@ namespace NHibernate.Proxy.DynamicProxy
 			System.Type parentType = baseType;
 			if (baseType.IsInterface)
 			{
-				parentType = typeof (ProxyDummy);
+				parentType = typeof(object);
 				interfaces.Add(baseType);
 			}
 
@@ -135,12 +135,18 @@ namespace NHibernate.Proxy.DynamicProxy
 			implementor.ImplementProxy(typeBuilder);
 
 			FieldInfo interceptorField = implementor.InterceptorField;
+
 			
 			// Provide a custom implementation of ISerializable
 			// instead of redirecting it back to the interceptor
-			foreach (MethodInfo method in GetProxiableMethods(baseType, interfaces).Where(method => method.DeclaringType != typeof(ISerializable)))
+			foreach (MethodInfo method in GetProxiableMethods(baseType, interfaces.Except(new[] {typeof(ISerializable), typeof(INHibernateProxy)})))
 			{
 				ProxyMethodBuilder.CreateProxiedMethod(interceptorField, method, typeBuilder);
+			}
+
+			if (interfaces.Contains(typeof(INHibernateProxy)))
+			{
+				NHibernateProxyImplementor.ImplementProxy(typeBuilder, interceptorField);
 			}
 
 			// Make the proxy serializable

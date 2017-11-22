@@ -6,8 +6,12 @@
 
 #endregion
 
+using System;
+
 namespace NHibernate.Proxy.DynamicProxy
 {
+	//Since v5.1
+	[Obsolete]
 	public class ProxyDummy
 	{
 		/* No Implementation */
