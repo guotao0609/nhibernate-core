@@ -16,14 +16,13 @@ namespace NHibernate.Proxy.DynamicProxy
 	[Serializable]
 	public class ProxyObjectReference : IObjectReference, ISerializable
 	{
-		private readonly System.Type _baseType;
-		private readonly IProxy _proxy;
+		private readonly object _proxy;
 
 		protected ProxyObjectReference(SerializationInfo info, StreamingContext context)
 		{
 			// Deserialize the base type using its assembly qualified name
 			string qualifiedName = info.GetString("__baseType");
-			_baseType = System.Type.GetType(qualifiedName, true, false);
+			var baseType = System.Type.GetType(qualifiedName, true, false);
 
 			// Rebuild the list of interfaces
 			var interfaceList = new List<System.Type>();
@@ -39,11 +38,11 @@ namespace NHibernate.Proxy.DynamicProxy
 
 			// Reconstruct the proxy
 			var factory = new ProxyFactory();
-			System.Type proxyType = factory.CreateProxyType(_baseType, interfaceList.ToArray());
+			System.Type proxyType = factory.CreateProxyType(baseType, interfaceList.ToArray());
 
 			// Initialize the proxy with the deserialized data
 			var args = new object[] {info, context};
-			_proxy = (IProxy) Activator.CreateInstance(proxyType, args);
+			_proxy = Activator.CreateInstance(proxyType, args);
 		}
 
 		#region IObjectReference Members
