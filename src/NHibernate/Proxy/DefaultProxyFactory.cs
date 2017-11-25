@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NHibernate.Engine;
 using NHibernate.Intercept;
 using NHibernate.Proxy.DynamicProxy;
@@ -7,20 +8,20 @@ namespace NHibernate.Proxy
 {
 	public class DefaultProxyFactory : AbstractProxyFactory
 	{
-		private readonly ProxyFactory factory = new ProxyFactory();
+
 		protected static readonly IInternalLogger log = LoggerProvider.LoggerFor(typeof (DefaultProxyFactory));
 
 		public override INHibernateProxy GetProxy(object id, ISessionImplementor session)
 		{
+			var factory = new ProxyFactory(new NHibernateProxyMethodBuilder(GetIdentifierMethod, SetIdentifierMethod, ComponentIdType, OverridesEquals));
 			try
 			{
-				var initializer = new DefaultLazyInitializer(EntityName, PersistentClass, id, GetIdentifierMethod, SetIdentifierMethod, ComponentIdType, session, OverridesEquals);
+				var proxyType = factory.CreateProxyType(IsClassProxy ? PersistentClass : typeof(object), Interfaces);
 
-				object proxyInstance = IsClassProxy
-										? factory.CreateProxy(PersistentClass, initializer, Interfaces)
-										: factory.CreateProxy(typeof(object), initializer, Interfaces);
-
-				return (INHibernateProxy) proxyInstance;
+				var result = Activator.CreateInstance(proxyType);
+				var proxy = (IProxy) result;
+				proxy.Interceptor = new LiteLazyInitializer(EntityName, id, session, PersistentClass);
+				return (INHibernateProxy) result;
 			}
 			catch (Exception ex)
 			{
@@ -31,8 +32,12 @@ namespace NHibernate.Proxy
 
 		public override object GetFieldInterceptionProxy(object instanceToWrap)
 		{
-			var interceptor = new DefaultDynamicLazyFieldInterceptor();
-			return factory.CreateProxy(PersistentClass, interceptor, new[] { typeof(IFieldInterceptorAccessor) });
+			var factory = new ProxyFactory();
+			var proxyType = factory.CreateProxyType(PersistentClass, typeof(IFieldInterceptorAccessor));
+			var result = Activator.CreateInstance(proxyType);
+			var proxy = (IProxy) result;
+			proxy.Interceptor = new DefaultDynamicLazyFieldInterceptor();
+			return result;
 		}
 	}
 }

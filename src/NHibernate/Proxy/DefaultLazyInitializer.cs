@@ -8,6 +8,8 @@ using NHibernate.Util;
 
 namespace NHibernate.Proxy
 {
+	//Since v5.1
+	[Obsolete("This class is not used anymore and will be removed in a future version. Please implement your version of ILazyInitializer")]
 	[Serializable]
 	public class DefaultLazyInitializer : BasicLazyInitializer, DynamicProxy.IInterceptor
 	{

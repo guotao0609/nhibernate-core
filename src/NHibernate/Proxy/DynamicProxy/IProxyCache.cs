@@ -11,6 +11,7 @@ using System.Reflection;
 
 namespace NHibernate.Proxy.DynamicProxy
 {
+	[Obsolete]
 	public interface IProxyCache
 	{
 		bool Contains(System.Type baseType, params System.Type[] baseInterfaces);

@@ -9,6 +9,7 @@ using NHibernate.Util;
 namespace NHibernate.Proxy.Poco
 {
 	/// <summary> Lazy initializer for POCOs</summary>
+	[Obsolete("This class is not used anymore and will be removed in a future version. Please implement your version of ILazyInitializer")]
 	[Serializable]
 	public abstract class BasicLazyInitializer : AbstractLazyInitializer
 	{
@@ -80,6 +81,10 @@ namespace NHibernate.Proxy.Poco
 				else if (methodName == "Dispose")
 				{
 					return null;
+				}
+				else if ("get_HibernateLazyInitializer".Equals(methodName))
+				{
+					return this;
 				}
 			}
 			else if (paramCount == 1)

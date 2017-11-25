@@ -107,7 +107,7 @@ namespace NHibernate.Bytecode.Lightweight
 			return new DynamicMethod(string.Empty, returnType, argumentTypes, owner, canSkipChecks);
 		}
 
-		private static void EmitCastToReference(ILGenerator il, System.Type type)
+		internal static void EmitCastToReference(ILGenerator il, System.Type type)
 		{
 			if (type.IsValueType)
 			{
