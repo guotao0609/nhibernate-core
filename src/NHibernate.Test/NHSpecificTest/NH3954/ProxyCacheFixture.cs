@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Reflection;
 using NHibernate.Proxy;
 using NHibernate.Proxy.DynamicProxy;
@@ -6,7 +7,7 @@ using NUnit.Framework;
 
 namespace NHibernate.Test.NHSpecificTest.NH3954
 {
-	[TestFixture, Explicit("Demonstrates bug impact on cache, but which tests will fail is a bit unpredictable")]
+	[TestFixture, Explicit("Demonstrates bug impact on cache, but which tests will fail is a bit unpredictable"), Obsolete]
 	public class ProxyCacheFixture
 	{
 		private ProxyCache _cache;
