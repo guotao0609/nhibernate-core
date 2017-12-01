@@ -17,36 +17,30 @@ namespace NHibernate.Proxy.DynamicProxy
 
 		public ProxyCacheEntry(System.Type baseType, System.Type[] interfaces)
 		{
-			if (baseType == null)
-				throw new ArgumentNullException(nameof(baseType));
-			BaseType = baseType;
-			_uniqueInterfaces = new HashSet<System.Type>(interfaces ?? new System.Type[0]);
+			BaseType = baseType ?? throw new ArgumentNullException(nameof(baseType));
 
-			if (_uniqueInterfaces.Count == 0)
+			var uniqueInterfaces = new HashSet<System.Type>();
+			if (interfaces != null && interfaces.Length != 0)
+				uniqueInterfaces.UnionWith(interfaces);
+			_uniqueInterfaces = uniqueInterfaces;
+
+			_hashCode = 59 ^ baseType.GetHashCode();
+			// This simple implementation is nonsensitive to list order. If changing it for a sensitive one,
+			// take care of ordering the list.
+			foreach (var type in _uniqueInterfaces)
 			{
-				_hashCode = baseType.GetHashCode();
-				return;
-			}
-			
-			var allTypes = new List<System.Type>(_uniqueInterfaces) { baseType };
-			_hashCode = 59;
-			foreach (System.Type type in allTypes)
-			{
-				// This simple implementation is nonsensitive to list order. If changing it for a sensitive one,
-				// take care of ordering the list.
 				_hashCode ^= type.GetHashCode();
 			}
 		}
 
 		public System.Type BaseType { get; }
-		public IReadOnlyCollection<System.Type> Interfaces { get { return _uniqueInterfaces; } }
-		
-		private HashSet<System.Type> _uniqueInterfaces;
+		public IReadOnlyCollection<System.Type> Interfaces => _uniqueInterfaces;
+
+		private readonly HashSet<System.Type> _uniqueInterfaces;
 
 		public override bool Equals(object obj)
 		{
-			var that = obj as ProxyCacheEntry;
-			return Equals(that);
+			return Equals(obj as ProxyCacheEntry);
 		}
 
 		public bool Equals(ProxyCacheEntry other)
