@@ -76,8 +76,9 @@ namespace NHibernate.Proxy
 			var typeBuilder = moduleBuilder.DefineType(typeName, typeAttributes, parentType, interfaces.ToArray());
 
 			var lazyInitializerField = typeBuilder.DefineField("__lazyInitializer", LazyInitializerType, FieldAttributes.Private);
+			var proxyFactoryField = typeBuilder.DefineField("_proxyFactory", typeof(IProxyFactory), FieldAttributes.Private);
 
-			var defaultConstructor = ImplementConstructor(typeBuilder, parentType, lazyInitializerField);
+			ImplementConstructor(typeBuilder, parentType, lazyInitializerField, proxyFactoryField);
 
 			// Provide a custom implementation of ISerializable
 			// instead of redirecting it back to the interceptor
@@ -91,8 +92,8 @@ namespace NHibernate.Proxy
 			var customAttributeBuilder = new CustomAttributeBuilder(serializableConstructor, new object[0]);
 			typeBuilder.SetCustomAttribute(customAttributeBuilder);
 
-			ImplementDeserializationConstructor(typeBuilder, lazyInitializerField, defaultConstructor);
-			ProxyFactory.ImplementGetObjectData(baseType, baseInterfaces, typeBuilder, lazyInitializerField);
+			ImplementDeserializationConstructor(typeBuilder);
+			ImplementGetObjectData(baseType, baseInterfaces, typeBuilder, lazyInitializerField, proxyFactoryField);
 
 			var proxyType = typeBuilder.CreateTypeInfo();
 
@@ -101,9 +102,9 @@ namespace NHibernate.Proxy
 			return proxyType;
 		}
 
-		static ConstructorBuilder ImplementConstructor(TypeBuilder typeBuilder, System.Type parentType, FieldInfo lazyInitializerField)
+		static void ImplementConstructor(TypeBuilder typeBuilder, System.Type parentType, FieldInfo lazyInitializerField, FieldInfo proxyFactoryField)
 		{
-			var constructor = typeBuilder.DefineConstructor(constructorAttributes, CallingConventions.Standard, new[]{ LazyInitializerType });
+			var constructor = typeBuilder.DefineConstructor(constructorAttributes, CallingConventions.Standard, new[]{ LazyInitializerType, typeof(IProxyFactory) });
 
 			var baseConstructor = parentType.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, System.Type.EmptyTypes, null);
 
@@ -123,38 +124,62 @@ namespace NHibernate.Proxy
 			IL.Emit(OpCodes.Ldarg_1);
 			IL.Emit(OpCodes.Stfld, lazyInitializerField);
 
-			IL.Emit(OpCodes.Ret);
+			IL.Emit(OpCodes.Ldarg_0);
+			IL.Emit(OpCodes.Ldarg_2);
+			IL.Emit(OpCodes.Stfld, proxyFactoryField);
 
-			return constructor;
+			IL.Emit(OpCodes.Ret);
 		}
 
-		static void ImplementDeserializationConstructor(TypeBuilder typeBuilder, FieldBuilder lazyInitializerField, ConstructorBuilder defaultConstructor)
+		static void ImplementDeserializationConstructor(TypeBuilder typeBuilder)
 		{
 			var parameterTypes = new[] {typeof (SerializationInfo), typeof (StreamingContext)};
 			var constructor = typeBuilder.DefineConstructor(constructorAttributes, CallingConventions.Standard, parameterTypes);
-
-			var IL = constructor.GetILGenerator();
-
-			var interceptorType = IL.DeclareLocal(typeof(System.Type));
-
 			constructor.SetImplementationFlags(MethodImplAttributes.IL | MethodImplAttributes.Managed);
 
-			IL.Emit(OpCodes.Ldtoken, LazyInitializerType);
-			IL.Emit(OpCodes.Call, ReflectionCache.TypeMethods.GetTypeFromHandle);
-			IL.Emit(OpCodes.Stloc, interceptorType);
+			var IL = constructor.GetILGenerator();
+			//Everything is done in NHibernateProxyObjectReference, so just return data.
+			IL.Emit(OpCodes.Ret);
+		}
 
-			IL.Emit(OpCodes.Ldarg_0);
-			IL.Emit(OpCodes.Call, defaultConstructor);
+		static void ImplementGetObjectData(System.Type baseType, IReadOnlyCollection<System.Type> baseInterfaces, TypeBuilder typeBuilder, FieldBuilder lazyInitializerField, FieldBuilder proxyFactoryField)
+		{
+			const MethodAttributes attributes = MethodAttributes.Public | MethodAttributes.HideBySig |
+			                                    MethodAttributes.Virtual;
+			var parameterTypes = new[] {typeof (SerializationInfo), typeof (StreamingContext)};
 
-			//TODO: Rename field
-			// __interceptor = (ILazyInitializer)info.GetValue("__interceptor", typeof(ILazyInitializer));
-			IL.Emit(OpCodes.Ldarg_0);
+			MethodBuilder methodBuilder =
+				typeBuilder.DefineMethod("GetObjectData", attributes, typeof (void), parameterTypes);
+
+			ILGenerator IL = methodBuilder.GetILGenerator();
+			//LocalBuilder proxyBaseType = IL.DeclareLocal(typeof(Type));
+
+			// info.SetType(typeof(NHibernateProxyObjectReference));
 			IL.Emit(OpCodes.Ldarg_1);
-			IL.Emit(OpCodes.Ldstr, "__interceptor");
-			IL.Emit(OpCodes.Ldloc, interceptorType);
-			IL.Emit(OpCodes.Callvirt, ProxyFactory.getValue);
-			IL.Emit(OpCodes.Castclass, LazyInitializerType);
-			IL.Emit(OpCodes.Stfld, lazyInitializerField);
+			IL.Emit(OpCodes.Ldtoken, typeof (NHibernateProxyObjectReference));
+			IL.Emit(OpCodes.Call, ReflectionCache.TypeMethods.GetTypeFromHandle);
+			IL.Emit(OpCodes.Callvirt, ProxyFactory.setType);
+
+			//this.__proxyFactory
+			IL.Emit(OpCodes.Ldarg_0);
+			IL.Emit(OpCodes.Ldfld, proxyFactoryField);
+
+			//this.LazyInitializer.Identifier
+			EmitGetLazyInitializer(IL);
+			IL.Emit(OpCodes.Callvirt, LazyInitializerIdentifierProperty.GetMethod);
+
+			var constructor = typeof(NHibernateProxyObjectReference).GetConstructor(
+				new[]
+				{
+					typeof(IProxyFactory),
+					typeof(object),
+				});
+			IL.Emit(OpCodes.Newobj, constructor);
+
+			IL.Emit(OpCodes.Ldarg_1);
+			IL.Emit(OpCodes.Ldarg_2);
+
+			IL.Emit(OpCodes.Callvirt, typeof(ISerializable).GetMethod(nameof(ISerializable.GetObjectData)));
 
 			IL.Emit(OpCodes.Ret);
 		}

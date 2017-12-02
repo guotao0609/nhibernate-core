@@ -1,17 +1,26 @@
 using System;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Runtime.Serialization;
 using NHibernate.Engine;
 using NHibernate.Intercept;
 using NHibernate.Proxy.DynamicProxy;
 
 namespace NHibernate.Proxy
 {
+	[Serializable]
 	public class DefaultProxyFactory : AbstractProxyFactory
 	{
 		static readonly ConcurrentDictionary<ProxyCacheEntry, TypeInfo> Cache = new ConcurrentDictionary<ProxyCacheEntry, TypeInfo>();
 
 		protected static readonly IInternalLogger log = LoggerProvider.LoggerFor(typeof (DefaultProxyFactory));
+
+		public DefaultProxyFactory()
+		{
+		}
+
+		protected DefaultProxyFactory(SerializationInfo info, StreamingContext context)
+			: base(info, context) { }
 
 		public override INHibernateProxy GetProxy(object id, ISessionImplementor session)
 		{
@@ -21,7 +30,7 @@ namespace NHibernate.Proxy
 				var cacheEntry = new ProxyCacheEntry(IsClassProxy ? PersistentClass : typeof(object), Interfaces);
 				var proxyType = Cache.GetOrAdd(cacheEntry, pke => proxyBuilder.CreateProxyType(pke.BaseType, pke.Interfaces));
 
-				return (INHibernateProxy) Activator.CreateInstance(proxyType, new LiteLazyInitializer(EntityName, id, session, PersistentClass));
+				return (INHibernateProxy) Activator.CreateInstance(proxyType, new LiteLazyInitializer(EntityName, id, session, PersistentClass), this);
 			}
 			catch (Exception ex)
 			{
