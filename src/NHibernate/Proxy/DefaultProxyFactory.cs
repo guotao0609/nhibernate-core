@@ -21,10 +21,7 @@ namespace NHibernate.Proxy
 				var cacheEntry = new ProxyCacheEntry(IsClassProxy ? PersistentClass : typeof(object), Interfaces);
 				var proxyType = Cache.GetOrAdd(cacheEntry, pke => proxyBuilder.CreateProxyType(pke.BaseType, pke.Interfaces));
 
-				var result = Activator.CreateInstance(proxyType);
-				var proxy = (IProxy) result;
-				proxy.Interceptor = new LiteLazyInitializer(EntityName, id, session, PersistentClass);
-				return (INHibernateProxy) result;
+				return (INHibernateProxy) Activator.CreateInstance(proxyType, new LiteLazyInitializer(EntityName, id, session, PersistentClass));
 			}
 			catch (Exception ex)
 			{
