@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using NHibernate.Intercept;
 using NHibernate.Proxy;
 using NHibernate.Proxy.DynamicProxy;
 using NHibernate.Type;
@@ -48,9 +49,9 @@ namespace NHibernate.Test.NHSpecificTest.NH3954
 		[Test]
 		public void InterfaceEquality()
 		{
-			var entry1 = new ProxyCacheEntry(typeof(Entity1), new[] { typeof(INHibernateProxy), typeof(IProxy) });
+			var entry1 = new ProxyCacheEntry(typeof(Entity1), new[] { typeof(INHibernateProxy), typeof(IFieldInterceptorAccessor) });
 			// Interfaces order inverted on purpose: must be supported.
-			var entry2 = new ProxyCacheEntry(typeof(Entity1), new[] { typeof(IProxy), typeof(INHibernateProxy) });
+			var entry2 = new ProxyCacheEntry(typeof(Entity1), new[] { typeof(IFieldInterceptorAccessor), typeof(INHibernateProxy) });
 			Assert.IsTrue(entry1.Equals(entry2));
 			Assert.IsTrue(entry2.Equals(entry1));
 		}
@@ -59,9 +60,9 @@ namespace NHibernate.Test.NHSpecificTest.NH3954
 		[Test]
 		public void InterfaceEqualityWithLotOfUnordererdAndDupInterfaces()
 		{
-			var entry1 = new ProxyCacheEntry(typeof(Entity1), new[] { typeof(INHibernateProxy), typeof(IProxy), typeof(IType), typeof(IDisposable), typeof(IFilter) });
+			var entry1 = new ProxyCacheEntry(typeof(Entity1), new[] { typeof(INHibernateProxy), typeof(IFieldInterceptorAccessor), typeof(IType), typeof(IDisposable), typeof(IFilter) });
 			// Interfaces order inverted and duplicated on purpose: must be supported.
-			var entry2 = new ProxyCacheEntry(typeof(Entity1), new[] { typeof(IType), typeof(IProxy), typeof(IFilter), typeof(IDisposable), typeof(IType), typeof(IFilter), typeof(INHibernateProxy) });
+			var entry2 = new ProxyCacheEntry(typeof(Entity1), new[] { typeof(IType), typeof(IFieldInterceptorAccessor), typeof(IFilter), typeof(IDisposable), typeof(IType), typeof(IFilter), typeof(INHibernateProxy) });
 			Assert.IsTrue(entry1.Equals(entry2));
 			Assert.IsTrue(entry2.Equals(entry1));
 		}
@@ -69,8 +70,8 @@ namespace NHibernate.Test.NHSpecificTest.NH3954
 		[Test]
 		public void InterfaceInequality()
 		{
-			var entry1 = new ProxyCacheEntry(typeof(Entity1), new[] { typeof(INHibernateProxy), typeof(IProxy) });
-			var entry2 = new ProxyCacheEntry(typeof(Entity1), new[] { typeof(IProxy) });
+			var entry1 = new ProxyCacheEntry(typeof(Entity1), new[] { typeof(INHibernateProxy), typeof(IFieldInterceptorAccessor) });
+			var entry2 = new ProxyCacheEntry(typeof(Entity1), new[] { typeof(IFieldInterceptorAccessor) });
 			TweakEntry(entry2, entry1.GetHashCode());
 			Assert.IsFalse(entry1.Equals(entry2));
 			Assert.IsFalse(entry2.Equals(entry1));
