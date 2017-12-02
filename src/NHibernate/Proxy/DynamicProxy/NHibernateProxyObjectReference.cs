@@ -18,7 +18,7 @@ namespace NHibernate.Proxy.DynamicProxy
 
 		NHibernateProxyObjectReference(SerializationInfo info, StreamingContext context)
 		{
-			_proxyFactory = (IProxyFactory) info.GetValue(nameof(_proxyFactory), typeof(DefaultProxyFactory));
+			_proxyFactory = (IProxyFactory) info.GetValue(nameof(_proxyFactory), typeof(IProxyFactory));
 			_identifier = info.GetValue(nameof(_identifier), typeof(object));
 		}
 
