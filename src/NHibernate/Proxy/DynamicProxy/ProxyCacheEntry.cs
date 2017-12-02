@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NHibernate.Proxy.DynamicProxy
 {
@@ -21,7 +22,7 @@ namespace NHibernate.Proxy.DynamicProxy
 
 			var uniqueInterfaces = new HashSet<System.Type>();
 			if (interfaces != null && interfaces.Length != 0)
-				uniqueInterfaces.UnionWith(interfaces);
+				uniqueInterfaces.UnionWith(interfaces.Where(t => t != null));
 			_uniqueInterfaces = uniqueInterfaces;
 
 			_hashCode = 59 ^ baseType.GetHashCode();

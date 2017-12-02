@@ -1,32 +1,97 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.Serialization;
+using NHibernate.Proxy.DynamicProxy;
 using NHibernate.Type;
 
-namespace NHibernate.Proxy.DynamicProxy
+namespace NHibernate.Proxy
 {
-	class NHibernateProxyMethodBuilder : IProxyMethodBuilder
+	class NHibernateProxyBuilder
 	{
 		const MethodAttributes InterceptorMethodsAttributes = MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.HideBySig |
 		                                                      MethodAttributes.SpecialName | MethodAttributes.NewSlot | MethodAttributes.Virtual;
 
 		const string HibernateLazyInitializerFieldName = nameof(INHibernateProxy.HibernateLazyInitializer);
+
 		static readonly System.Type NHibernateProxyType = typeof(INHibernateProxy);
 		static readonly PropertyInfo NHibernateProxyTypeLazyInitializerProperty = NHibernateProxyType.GetProperty(HibernateLazyInitializerFieldName);
 		static readonly System.Type LazyInitializerType = typeof(ILazyInitializer);
 		static readonly PropertyInfo LazyInitializerIdentifierProperty = LazyInitializerType.GetProperty(nameof(ILazyInitializer.Identifier));
 		static readonly MethodInfo LazyInitializerInitializeMethod = LazyInitializerType.GetMethod(nameof(ILazyInitializer.Initialize));
 		static readonly MethodInfo LazyInitializerGetImplementationMethod = LazyInitializerType.GetMethod(nameof(ILazyInitializer.GetImplementation), System.Type.EmptyTypes);
+		static readonly IProxyAssemblyBuilder ProxyAssemblyBuilder = new DefaultProxyAssemblyBuilder();
+
 		readonly MethodInfo _getIdentifierMethod;
 		readonly MethodInfo _setIdentifierMethod;
 		readonly IAbstractComponentType _componentIdType;
 		readonly bool _overridesEquals;
 
-		public NHibernateProxyMethodBuilder(MethodInfo getIdentifierMethod, MethodInfo setIdentifierMethod, IAbstractComponentType componentIdType, bool overridesEquals)
+		public NHibernateProxyBuilder(MethodInfo getIdentifierMethod, MethodInfo setIdentifierMethod, IAbstractComponentType componentIdType, bool overridesEquals)
 		{
 			_getIdentifierMethod = getIdentifierMethod;
 			_setIdentifierMethod = setIdentifierMethod;
 			_componentIdType = componentIdType;
 			_overridesEquals = overridesEquals;
+		}
+
+		public TypeInfo CreateProxyType(System.Type baseType, IReadOnlyCollection<System.Type> baseInterfaces)
+		{
+			var typeName = $"{baseType.Name}Proxy";
+			var assemblyName = $"{typeName}Assembly";
+			var moduleName = $"{typeName}Module";
+
+			var name = new AssemblyName(assemblyName);
+
+			var assemblyBuilder = ProxyAssemblyBuilder.DefineDynamicAssembly(AppDomain.CurrentDomain, name);
+			var moduleBuilder = ProxyAssemblyBuilder.DefineDynamicModule(assemblyBuilder, moduleName);
+
+			const TypeAttributes typeAttributes = TypeAttributes.AutoClass | TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.BeforeFieldInit;
+
+			var interfaces = new HashSet<System.Type>
+			{
+				// Add the ISerializable interface so that it can be implemented
+				typeof(ISerializable)
+			};
+			interfaces.UnionWith(baseInterfaces);
+			interfaces.UnionWith(baseInterfaces.SelectMany(i => i.GetInterfaces()));
+			interfaces.UnionWith(baseType.GetInterfaces());
+
+			// Use the proxy dummy as the base type 
+			// since we're not inheriting from any class type
+			var parentType = baseType;
+			if (baseType.IsInterface)
+			{
+				parentType = typeof(object);
+				interfaces.Add(baseType);
+			}
+
+			var typeBuilder = moduleBuilder.DefineType(typeName, typeAttributes, parentType, interfaces.ToArray());
+
+			var defaultConstructor = ProxyFactory.DefineConstructor(typeBuilder, parentType);
+
+			// Implement IProxy
+			var implementor = new ProxyImplementor();
+			implementor.ImplementProxy(typeBuilder);
+
+			var interceptorField = implementor.InterceptorField;
+
+			// Provide a custom implementation of ISerializable
+			// instead of redirecting it back to the interceptor
+			foreach (var method in ProxyFactory.GetProxiableMethods(baseType, interfaces.Except(new[] { typeof(ISerializable) })))
+			{
+				CreateProxiedMethod(interceptorField, method, typeBuilder);
+			}
+
+			// Make the proxy serializable
+			ProxyFactory.AddSerializationSupport(baseType, baseInterfaces, typeBuilder, interceptorField, defaultConstructor);
+			var proxyType = typeBuilder.CreateTypeInfo();
+
+			ProxyAssemblyBuilder.Save(assemblyBuilder);
+
+			return proxyType;
 		}
 
 		public void CreateProxiedMethod(FieldInfo field, MethodInfo method, TypeBuilder typeBuilder)

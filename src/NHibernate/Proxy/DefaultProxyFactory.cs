@@ -1,5 +1,6 @@
 using System;
-using System.Linq;
+using System.Collections.Concurrent;
+using System.Reflection;
 using NHibernate.Engine;
 using NHibernate.Intercept;
 using NHibernate.Proxy.DynamicProxy;
@@ -8,15 +9,17 @@ namespace NHibernate.Proxy
 {
 	public class DefaultProxyFactory : AbstractProxyFactory
 	{
+		static readonly ConcurrentDictionary<ProxyCacheEntry, TypeInfo> Cache = new ConcurrentDictionary<ProxyCacheEntry, TypeInfo>();
 
 		protected static readonly IInternalLogger log = LoggerProvider.LoggerFor(typeof (DefaultProxyFactory));
 
 		public override INHibernateProxy GetProxy(object id, ISessionImplementor session)
 		{
-			var factory = new ProxyFactory(new NHibernateProxyMethodBuilder(GetIdentifierMethod, SetIdentifierMethod, ComponentIdType, OverridesEquals));
 			try
 			{
-				var proxyType = factory.CreateProxyType(IsClassProxy ? PersistentClass : typeof(object), Interfaces);
+				var proxyBuilder = new NHibernateProxyBuilder(GetIdentifierMethod, SetIdentifierMethod, ComponentIdType, OverridesEquals);
+				var cacheEntry = new ProxyCacheEntry(IsClassProxy ? PersistentClass : typeof(object), Interfaces);
+				var proxyType = Cache.GetOrAdd(cacheEntry, pke => proxyBuilder.CreateProxyType(pke.BaseType, pke.Interfaces));
 
 				var result = Activator.CreateInstance(proxyType);
 				var proxy = (IProxy) result;

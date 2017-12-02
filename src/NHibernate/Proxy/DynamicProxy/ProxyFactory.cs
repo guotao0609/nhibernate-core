@@ -99,7 +99,7 @@ namespace NHibernate.Proxy.DynamicProxy
 
 			// Add any inherited interfaces
 			var computedInterfaces = interfaces.ToArray();
-			foreach (System.Type interfaceType in computedInterfaces)
+			foreach (var interfaceType in computedInterfaces)
 			{
 				interfaces.Merge(GetInterfaces(interfaceType));
 			}
@@ -132,7 +132,7 @@ namespace NHibernate.Proxy.DynamicProxy
 			return proxyType;
 		}
 
-		private static IEnumerable<System.Type> GetInterfaces(System.Type currentType)
+		internal static IEnumerable<System.Type> GetInterfaces(System.Type currentType)
 		{
 			return GetAllInterfaces(currentType);
 		}
@@ -151,7 +151,7 @@ namespace NHibernate.Proxy.DynamicProxy
 			}
 		}
 
-		private static IEnumerable<MethodInfo> GetProxiableMethods(System.Type type, IEnumerable<System.Type> interfaces)
+		internal static IEnumerable<MethodInfo> GetProxiableMethods(System.Type type, IEnumerable<System.Type> interfaces)
 		{
 			const BindingFlags candidateMethodsBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 			return 
@@ -160,7 +160,7 @@ namespace NHibernate.Proxy.DynamicProxy
 					.Concat(interfaces.SelectMany(interfaceType => interfaceType.GetMethods())).Distinct();
 		}
 
-		private static ConstructorBuilder DefineConstructor(TypeBuilder typeBuilder, System.Type parentType)
+		internal static ConstructorBuilder DefineConstructor(TypeBuilder typeBuilder, System.Type parentType)
 		{
 			const MethodAttributes constructorAttributes = MethodAttributes.Public |
 														   MethodAttributes.HideBySig | MethodAttributes.SpecialName |
@@ -275,7 +275,7 @@ namespace NHibernate.Proxy.DynamicProxy
 			IL.Emit(OpCodes.Ret);
 		}
 
-		private static void AddSerializationSupport(System.Type baseType, IReadOnlyCollection<System.Type> baseInterfaces, TypeBuilder typeBuilder, FieldInfo interceptorField, ConstructorBuilder defaultConstructor)
+		internal static void AddSerializationSupport(System.Type baseType, IReadOnlyCollection<System.Type> baseInterfaces, TypeBuilder typeBuilder, FieldInfo interceptorField, ConstructorBuilder defaultConstructor)
 		{
 			ConstructorInfo serializableConstructor = typeof(SerializableAttribute).GetConstructor(new System.Type[0]);
 			var customAttributeBuilder = new CustomAttributeBuilder(serializableConstructor, new object[0]);
