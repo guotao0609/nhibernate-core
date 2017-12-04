@@ -4,7 +4,7 @@ namespace NHibernate.Bytecode
 {
 	public class DefaultProxyFactoryFactory : IProxyFactoryFactory
 	{
-		#region IProxyFactoryFactory Members
+		internal static DefaultProxyFactoryFactory Instance = new DefaultProxyFactoryFactory();
 
 		public IProxyFactory BuildProxyFactory()
 		{
@@ -25,7 +25,5 @@ namespace NHibernate.Bytecode
 		{
 			return entity is INHibernateProxy;
 		}
-
-		#endregion
 	}
 }
